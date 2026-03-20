@@ -170,12 +170,14 @@ function focusNode(node) {
     .setLngLat([node.lng, node.lat])
     .addTo(map);
 
+  // Inside focusNode(node)...
   map.flyTo({
     center: [node.lng, node.lat],
     zoom: 16,
     pitch: 45,
-    // Increased padding so the popup isn't hidden by the mobile drawer
-    padding: { bottom: window.innerWidth < 768 ? 280 : 0 },
+    // Since the drawer is now smaller when closed (165px),
+    // we use a smaller padding so the marker is perfectly centered.
+    padding: { bottom: window.innerWidth < 768 ? 180 : 0 },
   });
 }
 
