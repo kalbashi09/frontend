@@ -3,228 +3,163 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HEALERTSYS | Live Monitor</title>
+    <title>HEALERTSYS | Sensor Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/maplibre-gl@3.x/dist/maplibre-gl.js"></script>
     <link
       href="https://unpkg.com/maplibre-gl@3.x/dist/maplibre-gl.css"
       rel="stylesheet"
     />
-    <style>
-      body {
-        margin: 0;
-        font-family: "Segoe UI", sans-serif;
-        background: #121212;
-        color: white;
-        display: flex;
-        height: 100vh;
-        overflow: hidden;
-      }
 
-      /* Split Layout */
-      #map {
-        flex: 1;
-        height: 100%;
-        position: relative;
-      }
-      #sidebar {
-        width: 450px;
-        background: #1e1e1e;
-        border-left: 1px solid #333;
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-
-      h1 {
-        color: #ff4757;
-        margin: 0 0 10px 0;
-        font-size: 1.4rem;
-        text-align: center;
-      }
-      .controls {
-        text-align: center;
-        margin-bottom: 15px;
-      }
-
-      button {
-        background: #2ed573;
-        border: none;
-        padding: 10px 15px;
-        color: white;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        width: 100%;
-      }
-      button:hover {
-        background: #7bed9f;
-      }
-
-      .table-wrapper {
-        flex-grow: 1;
-        overflow-y: auto;
-        margin-top: 10px;
-        border-radius: 5px;
-        background: #1e1e1e;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-      }
-      th,
-      td {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 1px solid #333;
-      }
-      th {
-        background: #2f3542;
-        color: #ffa502;
-        position: sticky;
-        top: 0;
-      }
-
-      .heat-tag {
-        padding: 3px 6px;
-        border-radius: 4px;
-        font-weight: bold;
-      }
-      .danger {
-        background: #ff4757;
-        color: white;
-      }
-      .caution {
-        background: #ffa502;
-        color: black;
-      }
-      .normal {
-        background: #2ed573;
-        color: white;
-      }
-
-      #loading {
-        font-size: 0.8rem;
-        color: #70a1ff;
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-
-    <div id="sidebar">
-      <h1>📍 HEALERTSYS</h1>
-      <div class="controls">
-        <button onclick="renderHistory()">🔄 Refresh Dashboard</button>
-        <div id="loading">Syncing tunnel...</div>
-      </div>
-
-      <div class="table-wrapper">
-        <table id="historyTable">
-          <thead>
-            <tr>
-              <th>Barangay</th>
-              <th>Temp</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </div>
-
+    <link rel="stylesheet" href="mapUI.css" />
     <script src="config.js"></script>
+  </head>
+  <body class="h-screen overflow-hidden flex flex-col md:flex-row bg-[#020617]">
+    <header
+      class="absolute top-0 left-0 right-0 z-30 p-4 pointer-events-none md:hidden"
+    >
+      <div class="flex items-center justify-between max-w-full">
+        <div
+          class="pointer-events-auto bg-slate-950/90 backdrop-blur-md p-3 rounded-lg border border-slate-800/50"
+        >
+          <h1 class="text-sm font-bold tracking-[0.2em] text-white">
+            HEALERTSYS
+          </h1>
+          <p
+            class="text-[8px] text-blue-500/80 font-bold uppercase tracking-widest"
+          >
+            Grid v3.0
+          </p>
+        </div>
 
-    <script>
-      const apiKey = HEALERTSYS_CONFIG.apiKey;
-      const apiURL = HEALERTSYS_CONFIG.apiURL;
+        <a
+          href="https://t.me/YOUR_BOT_USERNAME"
+          target="_blank"
+          class="pointer-events-auto bg-[#229ED9] text-white text-[10px] font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg border border-white/10"
+        >
+          <span>✈️</span> BOT
+        </a>
+      </div>
+    </header>
 
-      // Initialize Map
-      const map = new maplibregl.Map({
-        container: "map",
-        style:
-          "https://tiles.basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-        center: [123.848, 10.2447],
-        zoom: 12.5,
-      });
+    <aside
+      id="mainDrawer"
+      class="absolute bottom-0 left-0 right-0 md:relative md:w-[420px] bg-[#030712]/95 md:bg-[#030712] border-t md:border-t-0 md:border-r border-slate-800/50 flex flex-col h-[40vh] md:h-full z-20 backdrop-blur-lg md:backdrop-blur-none transition-all duration-300"
+    >
+      <div
+        class="md:hidden w-full py-3 cursor-pointer"
+        onclick="toggleDrawer()"
+      >
+        <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto"></div>
+      </div>
 
-      let currentMarker = null;
+      <div
+        class="hidden md:block p-6 border-b border-slate-900 bg-slate-950/50"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <h1 class="text-xl font-bold tracking-tight">
+              HEAT<span class="text-orange-500">SYNC</span>
+            </h1>
+            <p
+              class="text-[9px] text-blue-500/80 font-bold uppercase tracking-widest mt-1"
+            >
+              Grid Command v3.0
+            </p>
+          </div>
+          <a
+            href="https://t.me/YOUR_BOT_USERNAME"
+            target="_blank"
+            class="bg-[#229ED9]/10 hover:bg-[#229ED9]/20 text-[#229ED9] text-[10px] font-bold px-3 py-1.5 rounded border border-[#229ED9]/30 transition-all uppercase"
+          >
+            Telegram Bot
+          </a>
+        </div>
+      </div>
 
-      async function renderHistory() {
-        const loader = document.getElementById("loading");
-        const tableBody = document.getElementById("tableBody");
-        loader.style.display = "block";
+      <div
+        class="p-4 md:p-6 border-b border-slate-900 bg-slate-950/30 cursor-pointer md:cursor-default"
+        onclick="toggleDrawer()"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter"
+          >
+            Grid Status
+          </div>
+          <span
+            id="sync-status"
+            class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20"
+            >READY</span
+          >
+        </div>
 
-        try {
-          const response = await fetch(apiURL, {
-            method: "GET",
-            headers: {
-              "X-API-KEY": apiKey,
-              "X-Tunnel-Skip-Anti-Phishing-Page": "true",
-              Accept: "application/json",
-            },
-          });
+        <button
+          onclick="
+            event.stopPropagation();
+            syncData(true);
+          "
+          class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold p-3 rounded transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-900/20"
+        >
+          <span id="sync-icon">📡</span> SYNC LATEST SENSORS
+        </button>
+      </div>
 
-          if (!response.ok) throw new Error("API Bouncer blocked request");
+      <div class="px-4 py-3 bg-slate-950/20 border-b border-slate-900/50">
+        <div class="relative">
+          <i
+            data-lucide="search"
+            class="absolute left-3 top-2.5 w-4 h-4 text-slate-600"
+          ></i>
+          <input
+            type="text"
+            id="brgySearch"
+            placeholder="Search Barangay (e.g. Poblacion)"
+            class="w-full bg-slate-950 border border-slate-800 rounded-md py-2 pl-9 pr-4 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all placeholder:text-slate-700"
+          />
+        </div>
+      </div>
 
-          const data = await response.json();
-          loader.style.display = "none";
-          tableBody.innerHTML = "";
+      <div
+        class="flex-grow overflow-y-auto custom-scroll p-4 space-y-3"
+        id="sensorList"
+      ></div>
 
-          if (!data || data.length === 0) return;
+      <div
+        class="flex-grow overflow-y-auto custom-scroll p-4 space-y-3"
+        id="sensorList"
+      ></div>
 
-          // 1. MARK THE LATEST ONLY
-          const latest = data[0];
-          if (currentMarker) currentMarker.remove();
+      <div
+        class="p-3 bg-black/40 border-t border-slate-900 flex flex-col gap-2"
+      >
+        <div class="text-[9px] flex justify-between font-mono">
+          <span id="active-sensor-code" class="text-slate-400 uppercase"
+            >NODE: NULL</span
+          >
+          <span id="last-ping" class="text-slate-500">PING: --</span>
+        </div>
 
-          let markerColor = "#2ed573";
-          if (latest.heatIndex >= 42) markerColor = "#ff4757";
-          else if (latest.heatIndex >= 39) markerColor = "#ffa502";
+        <div class="hidden md:block pt-2 border-t border-slate-800/50">
+          <button
+            onclick="handleLogout()"
+            class="w-full flex items-center justify-between group px-2 py-1.5 rounded hover:bg-red-500/10 transition-colors text-slate-500 hover:text-red-400"
+          >
+            <span class="text-[10px] font-bold uppercase tracking-widest"
+              >Admin Session</span
+            >
+          </button>
+        </div>
+      </div>
+    </aside>
 
-          currentMarker = new maplibregl.Marker({ color: markerColor })
-            .setLngLat([latest.lng, latest.lat])
-            .setPopup(
-              new maplibregl.Popup().setHTML(
-                `<b>${latest.barangayName}</b><br>${latest.heatIndex}°C`,
-              ),
-            )
-            .addTo(map);
+    <main class="flex-grow relative bg-[#010409] h-full">
+      <div id="map" class="w-full h-full opacity-80"></div>
+      <div
+        class="absolute inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.9)] border-[10px] md:border-[20px] border-black/10"
+      ></div>
+    </main>
 
-          map.flyTo({ center: [latest.lng, latest.lat], zoom: 14 });
-
-          // 2. RENDER THE FULL TABLE
-          // Build the string in memory first (Efficient!)
-          let rowsHtml = "";
-
-          data.forEach((item) => {
-            let statusClass =
-              item.heatIndex >= 42
-                ? "danger"
-                : item.heatIndex >= 39
-                  ? "caution"
-                  : "normal";
-
-            rowsHtml += `
-                  <tr style="cursor:pointer" onclick="map.flyTo({center:[${item.lng}, ${item.lat}], zoom:15})">
-                      <td><strong>${item.barangayName}</strong></td>
-                      <td><span class="heat-tag ${statusClass}">${item.heatIndex}°C</span></td>
-                      <td>${item.time}</td>
-                  </tr>
-              `;
-          });
-
-          // Update the DOM exactly ONCE
-          tableBody.innerHTML = rowsHtml;
-        } catch (error) {
-          console.error(error);
-          loader.innerText = "❌ Sync Failed";
-        }
-      }
-
-      map.on("load", renderHistory);
-      setInterval(renderHistory, 10000); // Auto-update every 10 seconds
-    </script>
+    <script src="mapUI.js"></script>
   </body>
 </html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HEALERTSYS | Admin Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body
+    class="bg-slate-950 text-slate-200 font-sans min-h-screen flex items-center justify-center p-6"
+  >
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+      <div
+        class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/10 blur-[120px] rounded-full"
+      ></div>
+      <div
+        class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full"
+      ></div>
+    </div>
+
+    <main
+      class="w-full max-w-[1100px] grid grid-cols-2 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-md"
+    >
+      <section
+        class="p-12 flex flex-col justify-between border-r border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950"
+      >
+        <div>
+          <div class="flex items-center gap-3 mb-8">
+            <div class="bg-orange-500 p-2 rounded-lg">
+              <i data-lucide="thermometer-sun" class="text-white w-6 h-6"></i>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight">
+              HEAT<span class="text-orange-500">SYNC</span>
+              <span class="text-slate-400 font-light">ADMIN</span>
+            </h1>
+          </div>
+          <h2 class="text-4xl font-extrabold leading-tight mb-4">
+            Centralized Heat Monitoring <br />
+            & Alert Command.
+          </h2>
+          <p class="text-slate-400 text-lg max-w-md">
+            Access the Talisay City heat index grid, manage sensor nodes, and
+            broadcast emergency alerts to subscribers.
+          </p>
+        </div>
+
+        <div class="flex gap-6 text-sm text-slate-500 italic">
+          <span>V3.0.1 Stable</span>
+          <span>•</span>
+          <span>Cebu Province Region VII</span>
+        </div>
+      </section>
+
+      <section class="p-12 flex flex-col justify-center bg-slate-900/30">
+        <div class="max-w-sm mx-auto w-full">
+          <div class="mb-8">
+            <h3 class="text-2xl font-semibold mb-2 text-white">
+              Personnel Login
+            </h3>
+            <p class="text-slate-400">
+              Enter your official credentials to continue.
+            </p>
+          </div>
+
+          <form id="loginForm" class="space-y-5">
+            <div>
+              <label
+                class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-2"
+                >Personnel ID</label
+              >
+              <div class="relative">
+                <i
+                  data-lucide="user"
+                  class="absolute left-3 top-3 w-5 h-5 text-slate-600"
+                ></i>
+                <input
+                  type="text"
+                  id="personnelId"
+                  required
+                  class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-white placeholder:text-slate-600"
+                  placeholder="e.g. TCC-AD-001"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-2"
+                >Security Passcode</label
+              >
+              <div class="relative">
+                <i
+                  data-lucide="lock"
+                  class="absolute left-3 top-3 w-5 h-5 text-slate-600"
+                ></i>
+                <input
+                  type="password"
+                  id="passcode"
+                  required
+                  class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all text-white placeholder:text-slate-600"
+                  placeholder="••••••"
+                />
+              </div>
+            </div>
+
+            <div
+              id="errorMessage"
+              class="hidden text-red-400 text-sm bg-red-400/10 border border-red-400/20 p-3 rounded-lg flex items-center gap-2"
+            >
+              <i data-lucide="alert-circle" class="w-4 h-4"></i>
+              <span>Invalid credentials. Access Denied.</span>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-lg transition-all shadow-lg shadow-orange-900/20 flex items-center justify-center gap-2"
+            >
+              Initialize Command Session
+              <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+          </form>
+
+          <p class="mt-8 text-center text-xs text-slate-600">
+            This system is restricted to authorized TCC personnel only. All
+            access attempts are logged.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="logindash.js"></script>
+  </body>
+</html>

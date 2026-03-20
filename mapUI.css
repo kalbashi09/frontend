@@ -1,0 +1,125 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+body {
+  font-family: "JetBrains Mono", monospace;
+  background-color: #020617;
+  color: #94a3b8;
+}
+
+/* --- TACTICAL RADAR MARKER --- */
+.radar-node {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-core {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.node-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: tactical-pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  pointer-events: none;
+}
+
+@keyframes tactical-pulse {
+  0% {
+    transform: scale(0.1);
+    opacity: 1;
+    filter: blur(2px);
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+    filter: blur(15px);
+  }
+}
+
+/* --- HOVER DETAIL CARD (Hidden on Touch/Mobile) --- */
+.node-overlay {
+  display: none; /* Hide by default on mobile */
+  opacity: 0;
+  position: absolute;
+  bottom: 50px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  padding: 12px;
+  border-radius: 4px;
+  width: 220px;
+  z-index: 100;
+  transition: 0.2s ease-in-out;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+}
+
+/* Only enable hover overlay on Desktop */
+@media (min-width: 768px) {
+  .node-overlay {
+    display: block;
+    visibility: hidden;
+  }
+  .radar-node:hover .node-overlay {
+    visibility: visible;
+    opacity: 1;
+    bottom: 60px;
+  }
+}
+
+/* --- MOBILE DRAWER ADJUSTMENTS --- */
+@media (max-width: 767px) {
+  aside {
+    /* Safe area for rounded phone corners */
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Make sensor cards larger touch targets */
+  .sensor-card {
+    min-height: 80px;
+    padding: 1rem !important;
+  }
+}
+
+/* --- MOBILE DRAWER EXPANSION --- */
+@media (max-width: 767px) {
+  aside {
+    transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    height: 40vh; /* Origin Look */
+    border-radius: 20px 20px 0 0;
+  }
+
+  /* State when user wants to see more alerts */
+  aside.is-expanded {
+    height: 85vh;
+  }
+
+  /* Optional: A small "Handle" bar at the top of the drawer */
+  .drawer-handle {
+    width: 40px;
+    height: 4px;
+    background: #334155;
+    border-radius: 2px;
+    margin: 8px auto;
+    cursor: pointer;
+  }
+}
+
+/* --- SCROLLBAR --- */
+.custom-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}

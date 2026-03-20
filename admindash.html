@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HeatSync Admin | Talisay City</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar for that clean dark look */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+      }
+    </style>
+  </head>
+  <body class="bg-[#0f172a] text-slate-200 min-h-screen pb-20">
+    <nav
+      class="bg-[#1e293b] border-b border-slate-700/50 text-white p-4 mb-8 shadow-2xl"
+    >
+      <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-xl font-bold tracking-tight">
+          HEAT<span class="text-orange-500">SYNC</span>
+          <span class="text-slate-400 font-light">ADMIN</span>
+        </h1>
+        <div class="flex items-center gap-3">
+          <span
+            class="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded uppercase font-bold tracking-widest"
+            >Talisay City</span
+          >
+          <span
+            class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded"
+            >v3.0 Logic</span
+          >
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+        <div
+          class="bg-[#1e293b] rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden"
+        >
+          <div class="p-6 border-b border-slate-700/50 bg-[#1e293b]">
+            <div
+              class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+            >
+              <h2 class="font-semibold text-white flex items-center gap-2">
+                <span
+                  class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+                ></span>
+                Active Sensors
+              </h2>
+
+              <div class="flex flex-1 w-full md:w-auto max-w-md gap-2">
+                <div class="relative flex-1">
+                  <span
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  >
+                    <svg
+                      class="h-4 w-4 text-slate-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    id="sensorSearch"
+                    placeholder="Search Code or Barangay..."
+                    class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  />
+                </div>
+
+                <button
+                  onclick="openCreateMode()"
+                  class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition shadow-lg shadow-blue-900/20"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  New
+                </button>
+
+                <button
+                  onclick="loadSensors()"
+                  class="p-2 text-slate-400 hover:text-white transition"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead
+                class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider"
+              >
+                <tr>
+                  <th class="px-6 py-4 font-bold">Code</th>
+                  <th class="px-6 py-4 font-bold">Location</th>
+                  <th class="px-6 py-4 font-bold">Barangay</th>
+                  <th class="px-6 py-4 font-bold">Status</th>
+                  <th class="px-6 py-4 font-bold">Action</th>
+                </tr>
+              </thead>
+              <tbody
+                id="sensorBody"
+                class="divide-y divide-slate-700/50 text-slate-300"
+              ></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-1">
+        <div id="editSection" class="hidden sticky top-8 space-y-6">
+          <div
+            class="bg-[#1e293b] p-6 rounded-xl shadow-2xl border border-slate-700/50 ring-1 ring-blue-500/20"
+          >
+            <h3
+              class="text-lg font-bold text-white mb-4 flex items-center gap-2"
+              id="formTitle"
+            >
+              Edit Sensor
+            </h3>
+            <form id="updateForm" class="space-y-4">
+              <input type="hidden" id="sensorId" />
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-1">
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Sensor Code</label
+                  >
+                  <input
+                    type="text"
+                    id="editCode"
+                    disabled
+                    class="w-full p-2 bg-slate-900 border border-slate-700 rounded-md text-cyan-400 font-mono text-sm opacity-70 cursor-not-allowed"
+                  />
+                </div>
+                <div class="col-span-1">
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Status</label
+                  >
+                  <select
+                    id="editActive"
+                    class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  >
+                    <option value="true">✅ Active</option>
+                    <option value="false">❄️ Frozen</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                  >Display Name</label
+                >
+                <input
+                  type="text"
+                  id="editName"
+                  class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                />
+              </div>
+
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                  >Barangay</label
+                >
+                <input
+                  type="text"
+                  id="editBarangay"
+                  class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                />
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Latitude</label
+                  >
+                  <input
+                    type="number"
+                    step="any"
+                    id="editLat"
+                    class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Longitude</label
+                  >
+                  <input
+                    type="number"
+                    step="any"
+                    id="editLng"
+                    class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Baseline (°C)</label
+                  >
+                  <input
+                    type="number"
+                    id="editBaseline"
+                    class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-500 uppercase mb-1"
+                    >Environment</label
+                  >
+                  <select
+                    id="editEnv"
+                    class="w-full p-2 bg-slate-800 border border-slate-700 rounded-md text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="Indoor">🏠 Indoor</option>
+                    <option value="Indoor-AC">❄️ Indoor (AC)</option>
+                    <option value="Outdoor-Shade">☂️ Outdoor (Shade)</option>
+                    <option value="Outdoor-Sun">☀️ Outdoor (Sun)</option>
+                    <option value="Outdoor-Pavement">🛣️ Pavement</option>
+                    <option value="Unknown">❓ Unknown</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex gap-2 pt-4">
+                <button
+                  type="submit"
+                  class="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-500 font-bold transition shadow-lg shadow-blue-900/20"
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onclick="closeEdit()"
+                  class="bg-slate-700 text-slate-300 px-4 py-2 rounded-md hover:bg-slate-600 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div
+          id="noSelection"
+          class="bg-slate-800/30 border-2 border-dashed border-slate-700 rounded-xl p-10 text-center text-slate-500 sticky top-8"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-12 w-12 mx-auto mb-4 opacity-20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+            />
+          </svg>
+          <p>Select a sensor to modify configuration</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admindash.js"></script>
+  </body>
+</html>
