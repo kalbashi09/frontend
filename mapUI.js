@@ -180,8 +180,15 @@ function focusNode(node) {
 }
 
 function toggleDrawer() {
-  if (window.innerWidth < 768) drawer.classList.toggle("is-expanded");
+  if (window.innerWidth < 768) {
+    drawer.classList.toggle("is-expanded");
+  }
 }
+
+// Ensure the drawer handle is clickable
+document
+  .querySelector(".drawer-handle")
+  ?.addEventListener("click", toggleDrawer);
 
 function handleLogout() {
   sessionStorage.removeItem("isAdminAuthenticated");

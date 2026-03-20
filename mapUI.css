@@ -104,23 +104,22 @@ body {
 /* --- MOBILE DRAWER (Glassmorphism) --- */
 @media (max-width: 767px) {
   #mainDrawer {
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 40vh;
-    border-radius: 24px 24px 0 0;
-    backdrop-filter: blur(25px);
-    box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.9);
-    padding-bottom: env(safe-area-inset-bottom);
+    /* Set height to only show the handle, status, and button (~160px) */
+    height: 165px;
+    transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden; /* Prevent logs from peeking out */
+    display: flex;
+    flex-direction: column;
   }
 
   #mainDrawer.is-expanded {
-    height: 88vh;
+    height: 85vh; /* Standard expanded height */
   }
 
-  .node-overlay {
-    width: 190px;
-    padding: 10px;
-    bottom: 50px;
-    transform: scale(0.95);
+  /* Make sure the scrollable list only scrolls when expanded */
+  #sensorList {
+    flex-grow: 1;
+    overflow-y: auto;
   }
 }
 
