@@ -44,13 +44,16 @@ loginForm.addEventListener("submit", async (e) => {
   try {
     // 2. API Call to your C# Backend
     // Ensure the URL matches your Kestrel config (Default is http://localhost:5000)
-    const response = await fetch("http://localhost:5000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://backend-9lv5.onrender.com/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+    );
 
     const result = await response.json();
 
