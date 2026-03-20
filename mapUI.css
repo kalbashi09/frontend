@@ -77,13 +77,12 @@ body {
   pointer-events: none;
 }
 
-/* Desktop Hover & Mobile Active Logic */
-.radar-node:hover .node-overlay,
+/* This allows the info box to show on tap/click instead of just hover */
 .radar-node.is-active .node-overlay {
-  visibility: visible;
-  opacity: 1;
-  bottom: 65px;
-  pointer-events: auto;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  bottom: 60px; /* Adjust based on your marker height */
 }
 
 /* --- SENSOR DOTS (Background Markers) --- */

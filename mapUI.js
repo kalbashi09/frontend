@@ -121,6 +121,11 @@ function renderSidebar(data) {
 
 // --- 4. MAP & AUTH HELPERS ---
 function focusNode(node) {
+  // 1. Remove the 'active' class from any old markers still on the map
+  document
+    .querySelectorAll(".radar-node")
+    .forEach((el) => el.classList.remove("is-active"));
+
   if (activeMarker) activeMarker.remove();
 
   document.getElementById("active-sensor-code").innerText =
@@ -135,7 +140,10 @@ function focusNode(node) {
         : "#10b981";
 
   const el = document.createElement("div");
-  el.className = "radar-node";
+
+  // 2. ADD 'is-active' HERE. This forces the CSS to show the info box on mobile.
+  el.className = "radar-node is-active";
+
   el.innerHTML = `
         <div class="node-pulse" style="background: radial-gradient(circle, ${color}33 0%, transparent 70%); border: 1px solid ${color}44"></div>
         <div class="node-core" style="background: ${color}"></div>
@@ -153,6 +161,11 @@ function focusNode(node) {
         </div>
     `;
 
+  // 3. Add a click listener to the marker itself for mobile
+  el.addEventListener("click", () => {
+    el.classList.toggle("is-active");
+  });
+
   activeMarker = new maplibregl.Marker({ element: el })
     .setLngLat([node.lng, node.lat])
     .addTo(map);
@@ -161,7 +174,8 @@ function focusNode(node) {
     center: [node.lng, node.lat],
     zoom: 16,
     pitch: 45,
-    padding: { bottom: window.innerWidth < 768 ? 250 : 0 },
+    // Increased padding so the popup isn't hidden by the mobile drawer
+    padding: { bottom: window.innerWidth < 768 ? 280 : 0 },
   });
 }
 
