@@ -27,36 +27,53 @@ body {
   transition: transform 0.2s ease;
 }
 
-.node-core {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-  transform: rotate(45deg);
-  z-index: 10;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+@keyframes node-pulse-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.9;
+    filter: blur(0.5px); /* Start slightly sharp */
+  }
+  20% {
+    opacity: 2; /* Quick pop in */
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(5.5);
+    opacity: 0; /* Fade out as it expands */
+    filter: blur(12px); /* Blur increases as the "heat" dissipates */
+  }
 }
 
 .node-pulse {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  animation: tactical-pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  box-sizing: border-box;
   pointer-events: none;
+  z-index: 1;
+
+  /* ADDED: Initial blur state for consistency */
+  filter: blur(4px);
+
+  /* Increased duration slightly to 2.5s for a smoother "heat wave" feel */
+  animation: node-pulse-expand 2.5s cubic-bezier(0.21, 0.61, 0.35, 1) infinite;
 }
 
-@keyframes tactical-pulse {
-  0% {
-    transform: scale(0.1);
-    opacity: 1;
-    filter: blur(2px);
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-    filter: blur(10px);
-  }
+/* Ensure the core stands out */
+.node-core {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  /* Using a subtle white inner-ring makes the core look like a real LED/Sensor */
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 0 15px rgba(0, 0, 0, 0.8),
+    0 0 5px rgba(255, 255, 255, 0.2);
+  z-index: 2;
+  position: relative;
 }
 
 /* --- HOVER/ACTIVE DETAIL CARD --- */
