@@ -59,12 +59,10 @@ async function loadSensors() {
                 "X-Tunnel-Skip-Anti-Phishing-Page": "true",
               },
             });
-            // Replace the alert calls inside the delete listener
             if (res.ok) {
-              showStatus(`Sensor ${s.sensorCode} deleted.`, "success");
               loadSensors();
             } else {
-              showStatus("Delete Failed: Check API Key.", "error");
+              alert("❌ Delete Failed");
             }
           } catch (err) {
             alert("Critical: Server Unreachable");
@@ -77,8 +75,8 @@ async function loadSensors() {
 
     // --- ADD THESE LINES HERE ---
   } catch (err) {
-    console.error("Sync Error:", err);
-    showStatus("Connection Error: Backend unreachable!", "error");
+    console.error("Critical: Failed to sync with backend.", err);
+    alert("Connection Error: Backend unreachable!");
   }
 } // End of loadSensors
 
@@ -182,36 +180,30 @@ document.getElementById("updateForm").onsubmit = async (e) => {
       method: method,
       headers: {
         "Content-Type": "application/json",
-        "X-API-KEY": HEALERTSYS_CONFIG.apiKey, // Crucial for your Render backend
+        "X-API-KEY": HEALERTSYS_CONFIG.apiKey,
         "X-Tunnel-Skip-Anti-Phishing-Page": "true",
       },
       body: JSON.stringify(data),
     });
 
     if (res.ok) {
-      showStatus(
-        isEditMode
-          ? `Updated ${sensorCode} configuration.`
-          : `Successfully registered ${sensorCode}.`,
-        "success",
+      alert(
+        isEditMode ? `✅ Updated ${sensorCode}` : `✅ Registered ${sensorCode}`,
       );
       loadSensors();
       closeEdit();
-    } else if (res.status === 409) {
-      showStatus(
-        `Conflict: The code "${sensorCode}" is already in use.`,
-        "warning",
+    }
+    // 🔥 ADD THIS SPECIFIC CHECK HERE
+    else if (res.status === 409) {
+      alert(
+        `❌ Conflict: The code "${sensorCode}" is already assigned to another sensor.`,
       );
     } else {
-      const errorMsg = await res.json().catch(() => ({}));
-      showStatus(
-        `Backend Error: ${errorMsg.message || "Failed to process."}`,
-        "error",
-      );
+      const errorText = await res.text();
+      alert("❌ Server Error: " + errorText);
     }
   } catch (err) {
-    showStatus("Critical: Connection to Render backend lost.", "error");
-    console.error(err);
+    alert("Critical: Could not reach the server.");
   }
 };
 
@@ -226,57 +218,6 @@ function handleLogout() {
 
   // 3. Redirect to login page
   window.location.href = "logindash.html";
-}
-
-function showStatus(message, type = "success") {
-  let container = document.getElementById("notif-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "notif-container";
-    container.className = "fixed top-5 right-5 z-[9999] w-80 space-y-3";
-    document.body.appendChild(container);
-  }
-
-  const styles = {
-    success: {
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/50",
-      icon: "check-circle",
-      text: "text-emerald-400",
-    },
-    error: {
-      bg: "bg-rose-500/10",
-      border: "border-rose-500/50",
-      icon: "alert-octagon",
-      text: "text-rose-400",
-    },
-    warning: {
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/50",
-      icon: "alert-triangle",
-      text: "text-amber-400",
-    },
-  };
-
-  const config = styles[type] || styles.success;
-  const toast = document.createElement("div");
-  toast.className = `flex items-start gap-3 p-4 border rounded-lg shadow-2xl backdrop-blur-md transition-all duration-500 ${config.bg} ${config.border}`;
-
-  toast.innerHTML = `
-    <i data-lucide="${config.icon}" class="${config.text} w-5 h-5 mt-0.5"></i>
-    <div class="flex-1">
-      <p class="text-[10px] font-black uppercase tracking-widest opacity-60 ${config.text}">${type}</p>
-      <p class="text-xs font-bold text-white leading-tight">${message}</p>
-    </div>
-  `;
-
-  container.appendChild(toast);
-  if (window.lucide) lucide.createIcons();
-
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 500);
-  }, 4000);
 }
 
 // Start!
