@@ -1,6 +1,7 @@
 const { apiKey, apiURL } = HEALERTSYS_CONFIG;
 let activeMarker = null;
 let allNodes = [];
+let globalHottestKeys = new Set();
 const drawer = document.getElementById("mainDrawer");
 
 const map = new maplibregl.Map({
@@ -35,6 +36,36 @@ function getTailwindColorClass(heat) {
   return "text-blue-400";
 }
 
+function getNodeDedupeKey(node) {
+  const sensorCode = (node.sensorCode || "").trim().toUpperCase();
+  return sensorCode || `${node.lat || ""}_${node.lng || ""}`;
+}
+
+function getCurrentHotSensorKeys() {
+  const uniqueSensors = dedupeLatestBySensor(allNodes);
+  if (!uniqueSensors || uniqueSensors.length === 0) return new Set();
+
+  const getMinuteBasis = (node) => {
+    const d = new Date(node.rawTime || node.time);
+    d.setSeconds(0, 0);
+    return d.getTime();
+  };
+
+  const latestMinute = Math.max(...uniqueSensors.map((n) => getMinuteBasis(n)));
+  const windowNodes = uniqueSensors.filter(
+    (n) => getMinuteBasis(n) === latestMinute,
+  );
+
+  const maxHeatInWindow = Math.max(
+    ...windowNodes.map((n) => parseFloat(n.heatIndex)),
+  );
+  const priorityNodes = windowNodes.filter(
+    (n) => parseFloat(n.heatIndex) === maxHeatInWindow,
+  );
+
+  return new Set(priorityNodes.map(getNodeDedupeKey));
+}
+
 // --- Helper: Deduplicate and keep latest reading per sensor ---
 function dedupeLatestBySensor(data) {
   const latest = new Map();
@@ -65,18 +96,25 @@ function dedupeLatestBySensor(data) {
 // --- 1. SEARCH LOGIC ---
 document.getElementById("brgySearch").addEventListener("input", (e) => {
   const term = e.target.value.toLowerCase().trim();
-  if (!term) {
-    renderSidebar(allNodes);
-    return;
+
+  let filtered = allNodes;
+  if (term) {
+    filtered = allNodes.filter((node) => {
+      return (
+        (node.barangayName || "").toLowerCase().includes(term) ||
+        (node.displayName || "").toLowerCase().includes(term) ||
+        (node.sensorCode || "").toLowerCase().includes(term)
+      );
+    });
   }
-  const filtered = allNodes.filter((node) => {
-    return (
-      (node.barangayName || "").toLowerCase().includes(term) ||
-      (node.displayName || "").toLowerCase().includes(term) ||
-      (node.sensorCode || "").toLowerCase().includes(term)
-    );
-  });
-  renderSidebar(filtered);
+
+  // Render and grab the top result
+  const sorted = renderSidebar(filtered);
+
+  // If we found something and the user is actively searching, fly to the top match
+  if (term && sorted.length > 0) {
+    focusNode(sorted[0]);
+  }
 });
 
 // --- 2. DATA SYNC LOGIC ---
@@ -94,40 +132,34 @@ async function syncData(flyToLatest = false) {
     const data = await response.json();
     allNodes = data;
 
-    // Standard Search Filter Logic
+    // 1. Calculate the Global Truth (True Hottest across all sensors)
+    globalHottestKeys = getCurrentHotSensorKeys();
+
+    // 2. Prepare the display list based on current search term
     const currentSearch = document
       .getElementById("brgySearch")
       .value.toLowerCase()
       .trim();
+    let displayNodes = allNodes;
+
     if (currentSearch) {
-      const filtered = allNodes.filter(
+      displayNodes = allNodes.filter(
         (n) =>
           (n.barangayName || "").toLowerCase().includes(currentSearch) ||
-          (n.displayName || "").toLowerCase().includes(currentSearch),
+          (n.displayName || "").toLowerCase().includes(currentSearch) ||
+          (n.sensorCode || "").toLowerCase().includes(currentSearch),
       );
-      renderSidebar(filtered);
-    } else {
-      renderSidebar(allNodes);
     }
 
-    // --- NEW: FLY TO THE HOTTEST SENSOR ---
-    if (flyToLatest && data.length > 0) {
-      // 1. Get the latest time window
-      const latestTime = Math.max(
-        ...data.map((n) => new Date(n.rawTime).getTime()),
-      );
+    // 3. Render the Sidebar and get back the CLEAN, SORTED array
+    // This is the array where the "Hottest" is guaranteed to be at index [0]
+    const sortedNodes = renderSidebar(displayNodes);
 
-      // 2. Filter for nodes in that window
-      const latestNodes = data.filter(
-        (n) => new Date(n.rawTime).getTime() === latestTime,
-      );
-
-      // 3. Find the one with the highest Heat Index
-      const hottestNode = latestNodes.sort(
-        (a, b) => parseFloat(b.heatIndex) - parseFloat(a.heatIndex),
-      )[0];
-
-      if (hottestNode) focusNode(hottestNode);
+    // 4. FLY TO the top sensor in the VISIBLE list
+    // This ensures that if you searched "Bulacao", it flies to Bulacao.
+    // If you didn't search, it flies to the Global Hottest.
+    if (flyToLatest && sortedNodes.length > 0) {
+      focusNode(sortedNodes[0]);
     }
 
     status.innerText = "READY";
@@ -141,59 +173,29 @@ async function syncData(flyToLatest = false) {
 function renderSidebar(data) {
   const container = document.getElementById("sensorList");
   container.innerHTML = "";
+  if (!data || data.length === 0) return []; // Return empty array if no data
 
-  if (!data || data.length === 0) return;
-
-  // --- 1. HELPER FOR TIME COMPARISON ---
-  const getMinuteBasis = (node) => {
-    const d = new Date(node.rawTime || node.time);
-    d.setSeconds(0, 0);
-    return d.getTime();
-  };
-
-  // --- 2. UNIQUE FILTER: Keep only the latest entry per Sensor Code ---
   const uniqueSensors = dedupeLatestBySensor(data);
 
-  // --- 3. SORTING: Newest first ---
-  uniqueSensors.sort(
-    (a, b) => new Date(b.rawTime || b.time) - new Date(a.rawTime || a.time),
-  );
+  // Sorting logic (Stay the same: Hottest Globally -> Newest)
+  uniqueSensors.sort((a, b) => {
+    const aKey = getNodeDedupeKey(a);
+    const bKey = getNodeDedupeKey(b);
+    const aIsHot = globalHottestKeys.has(aKey);
+    const bIsHot = globalHottestKeys.has(bKey);
 
-  // --- 4. FIND THE "HOTTEST" NODES (Handling Ties) ---
-  const latestMinute = Math.max(...uniqueSensors.map((n) => getMinuteBasis(n)));
-  const currentWindowNodes = uniqueSensors.filter(
-    (n) => getMinuteBasis(n) === latestMinute,
-  );
+    if (aIsHot && !bIsHot) return -1;
+    if (!aIsHot && bIsHot) return 1;
+    return new Date(b.rawTime) - new Date(a.rawTime);
+  });
 
-  // Get the highest value in this window
-  const maxHeatInWindow = Math.max(
-    ...currentWindowNodes.map((n) => parseFloat(n.heatIndex)),
-  );
-
-  // Find ALL nodes that have this max heat
-  const priorityNodes = currentWindowNodes.filter(
-    (n) => parseFloat(n.heatIndex) === maxHeatInWindow,
-  );
-
-  // --- 5. ASSEMBLE FINAL LIST ---
-  // Remove all priority nodes from the rest of the list to avoid duplicates
-  const remainingNodes = uniqueSensors.filter(
-    (n) => !priorityNodes.includes(n),
-  );
-
-  // Put all hottest nodes at the very top
-  const finalSortedList = [...priorityNodes, ...remainingNodes];
-
-  // --- 6. RENDER LOOP ---
-  finalSortedList.forEach((node) => {
-    // Change this check to look inside the array
-    const isPriority = priorityNodes.includes(node);
-
+  // 3. Render
+  uniqueSensors.forEach((node) => {
+    const isPriority = globalHottestKeys.has(getNodeDedupeKey(node));
     const heat = node.heatIndex;
     const colorHex = getHeatColor(heat);
     const colorClass = getTailwindColorClass(heat);
 
-    // ... rest of your card creation code ...
     const card = document.createElement("div");
     card.className = `bg-slate-900/30 border border-white/5 border-l-4 p-4 cursor-pointer hover:bg-white/[0.03] transition-all group ${
       isPriority ? "bg-white/[0.02] border-l-[#f24e1e]" : ""
@@ -218,6 +220,8 @@ function renderSidebar(data) {
     card.addEventListener("click", () => focusNode(node));
     container.appendChild(card);
   });
+
+  return uniqueSensors;
 }
 
 // Helper to prevent crashes if something goes wrong with the priority logic
