@@ -12,6 +12,12 @@ const map = new maplibregl.Map({
   attributionControl: false,
 });
 
+// Add this at the VERY top
+if (typeof HEALERTSYS_CONFIG === "undefined") {
+  console.error("CRITICAL: config.js is missing or not loaded!");
+  alert("System Configuration Error. Check console.");
+}
+
 // --- 0. SHARED COLOR LOGIC (5 STATES) ---
 function getHeatColor(heat) {
   if (heat >= 49) return "#be123c"; // 🔴 EXTREME DANGER
@@ -91,45 +97,56 @@ function renderSidebar(data) {
 
   if (!data || data.length === 0) return;
 
-  // --- ADD THIS HELPER BACK ---
+  // --- 1. HELPER FOR TIME COMPARISON ---
   const getMinuteBasis = (node) => {
     const d = new Date(node.rawTime || node.time);
     d.setSeconds(0, 0);
     return d.getTime();
   };
-  // ----------------------------
 
-  // 1. Sort the ENTIRE dataset by time first (Newest pings at the top)
-  data.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+  // --- 2. UNIQUE FILTER: Keep only the latest entry per Sensor Code ---
+  const uniqueSensors = Object.values(
+    data.reduce((acc, current) => {
+      const sensorId = current.sensorCode;
+      const currentTimestamp = new Date(current.rawTime).getTime();
 
-  // 2. FIND THE LATEST MINUTE WINDOW
-  const latestMinute = Math.max(...data.map((n) => getMinuteBasis(n)));
+      if (
+        !acc[sensorId] ||
+        currentTimestamp > new Date(acc[sensorId].rawTime).getTime()
+      ) {
+        acc[sensorId] = current;
+      }
+      return acc;
+    }, {}),
+  );
 
-  // 3. ISOLATE CANDIDATES FOR THE "HOTTEST" CROWN
-  const currentWindowNodes = data.filter(
+  // --- 3. SORTING: Newest first ---
+  uniqueSensors.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+  // --- 4. FIND THE "HOTTEST" IN THE LATEST WINDOW ---
+  const latestMinute = Math.max(...uniqueSensors.map((n) => getMinuteBasis(n)));
+  const currentWindowNodes = uniqueSensors.filter(
     (n) => getMinuteBasis(n) === latestMinute,
   );
 
-  // 4. PICK THE KING (Hottest in that latest minute)
   const priorityNode = [...currentWindowNodes].sort(
     (a, b) => parseFloat(b.heatIndex) - parseFloat(a.heatIndex),
   )[0];
 
-  // 5. ASSEMBLE DYNAMIC LIST
-  const remainingNodes = data.filter((n) => n !== priorityNode);
+  // --- 5. ASSEMBLE FINAL LIST ---
+  const remainingNodes = uniqueSensors.filter((n) => n !== priorityNode);
   const finalSortedList = priorityNode
     ? [priorityNode, ...remainingNodes]
-    : data;
+    : uniqueSensors;
 
-  // 6. RENDER
-  finalSortedList.forEach((node, index) => {
+  // --- 6. RENDER LOOP ---
+  finalSortedList.forEach((node) => {
     const isPriority = priorityNode && node === priorityNode;
     const heat = node.heatIndex;
     const colorHex = getHeatColor(heat);
     const colorClass = getTailwindColorClass(heat);
 
     const card = document.createElement("div");
-
     card.className = `bg-slate-900/30 border border-white/5 border-l-4 p-4 cursor-pointer hover:bg-white/[0.03] transition-all group ${
       isPriority ? "bg-white/[0.02] border-l-[#f24e1e]" : ""
     }`;
@@ -224,4 +241,4 @@ function handleLogout() {
 // Initialization
 if (window.lucide) lucide.createIcons();
 map.on("load", () => syncData(false));
-setInterval(() => syncData(false), 30000);
+setInterval(() => syncData(false), 10000); // 10 seconds
