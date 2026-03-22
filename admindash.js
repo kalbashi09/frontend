@@ -61,6 +61,8 @@ async function loadSensors() {
             });
             if (res.ok) {
               loadSensors();
+            } else if (res.status === 409) {
+              alert("❌ Update Failed: That Sensor Code is already taken!");
             } else {
               alert("❌ Delete Failed");
             }
@@ -102,7 +104,7 @@ function handleEditClick(sensor) {
 
   // Lock the code field for edits
   const codeField = document.getElementById("editCode");
-  codeField.disabled = true;
+  codeField.disabled = false; // Allow editing of code for PATCH (if your backend supports it)
   codeField.classList.add("opacity-70", "cursor-not-allowed");
 
   document.querySelector('#updateForm button[type="submit"]').innerText =
