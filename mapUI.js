@@ -35,6 +35,33 @@ function getTailwindColorClass(heat) {
   return "text-blue-400";
 }
 
+// --- Helper: Deduplicate and keep latest reading per sensor ---
+function dedupeLatestBySensor(data) {
+  const latest = new Map();
+
+  data.forEach((node) => {
+    const sensorCode = (node.sensorCode || "").trim().toUpperCase();
+    const dedupeKey = sensorCode || `${node.lat || ""}_${node.lng || ""}`;
+    const candidateTime = new Date(node.rawTime || node.time || 0).getTime();
+
+    if (!latest.has(dedupeKey)) {
+      latest.set(dedupeKey, node);
+      return;
+    }
+
+    const existing = latest.get(dedupeKey);
+    const existingTime = new Date(
+      existing.rawTime || existing.time || 0,
+    ).getTime();
+
+    if (candidateTime > existingTime) {
+      latest.set(dedupeKey, node);
+    }
+  });
+
+  return Array.from(latest.values());
+}
+
 // --- 1. SEARCH LOGIC ---
 document.getElementById("brgySearch").addEventListener("input", (e) => {
   const term = e.target.value.toLowerCase().trim();
@@ -125,23 +152,12 @@ function renderSidebar(data) {
   };
 
   // --- 2. UNIQUE FILTER: Keep only the latest entry per Sensor Code ---
-  const uniqueSensors = Object.values(
-    data.reduce((acc, current) => {
-      const sensorId = current.sensorCode;
-      const currentTimestamp = new Date(current.rawTime).getTime();
-
-      if (
-        !acc[sensorId] ||
-        currentTimestamp > new Date(acc[sensorId].rawTime).getTime()
-      ) {
-        acc[sensorId] = current;
-      }
-      return acc;
-    }, {}),
-  );
+  const uniqueSensors = dedupeLatestBySensor(data);
 
   // --- 3. SORTING: Newest first ---
-  uniqueSensors.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+  uniqueSensors.sort(
+    (a, b) => new Date(b.rawTime || b.time) - new Date(a.rawTime || a.time),
+  );
 
   // --- 4. FIND THE "HOTTEST" NODES (Handling Ties) ---
   const latestMinute = Math.max(...uniqueSensors.map((n) => getMinuteBasis(n)));
