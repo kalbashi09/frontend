@@ -53,7 +53,6 @@ document.getElementById("brgySearch").addEventListener("input", (e) => {
 });
 
 // --- 2. DATA SYNC LOGIC ---
-// --- 2. DATA SYNC LOGIC ---
 async function syncData(flyToLatest = false) {
   const status = document.getElementById("sync-status");
   status.innerText = "SYNCING";
@@ -144,34 +143,45 @@ function renderSidebar(data) {
   // --- 3. SORTING: Newest first ---
   uniqueSensors.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
 
-  // --- 4. FIND THE "HOTTEST" IN THE LATEST WINDOW ---
+  // --- 4. FIND THE "HOTTEST" NODES (Handling Ties) ---
   const latestMinute = Math.max(...uniqueSensors.map((n) => getMinuteBasis(n)));
   const currentWindowNodes = uniqueSensors.filter(
     (n) => getMinuteBasis(n) === latestMinute,
   );
 
-  const priorityNode = [...currentWindowNodes].sort(
-    (a, b) => parseFloat(b.heatIndex) - parseFloat(a.heatIndex),
-  )[0];
+  // Get the highest value in this window
+  const maxHeatInWindow = Math.max(
+    ...currentWindowNodes.map((n) => parseFloat(n.heatIndex)),
+  );
+
+  // Find ALL nodes that have this max heat
+  const priorityNodes = currentWindowNodes.filter(
+    (n) => parseFloat(n.heatIndex) === maxHeatInWindow,
+  );
 
   // --- 5. ASSEMBLE FINAL LIST ---
-  const remainingNodes = uniqueSensors.filter((n) => n !== priorityNode);
-  const finalSortedList = priorityNode
-    ? [priorityNode, ...remainingNodes]
-    : uniqueSensors;
+  // Remove all priority nodes from the rest of the list to avoid duplicates
+  const remainingNodes = uniqueSensors.filter(
+    (n) => !priorityNodes.includes(n),
+  );
+
+  // Put all hottest nodes at the very top
+  const finalSortedList = [...priorityNodes, ...remainingNodes];
 
   // --- 6. RENDER LOOP ---
   finalSortedList.forEach((node) => {
-    const isPriority = priorityNode && node === priorityNode;
+    // Change this check to look inside the array
+    const isPriority = priorityNodes.includes(node);
+
     const heat = node.heatIndex;
     const colorHex = getHeatColor(heat);
     const colorClass = getTailwindColorClass(heat);
 
+    // ... rest of your card creation code ...
     const card = document.createElement("div");
     card.className = `bg-slate-900/30 border border-white/5 border-l-4 p-4 cursor-pointer hover:bg-white/[0.03] transition-all group ${
       isPriority ? "bg-white/[0.02] border-l-[#f24e1e]" : ""
     }`;
-    card.style.borderLeftColor = isPriority ? "#f24e1e" : colorHex;
 
     card.innerHTML = `
       <div class="flex justify-between items-start">
