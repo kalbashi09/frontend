@@ -273,7 +273,8 @@ function focusNode(node) {
     center: [node.lng, node.lat],
     zoom: 16,
     pitch: 45,
-    padding: { bottom: window.innerWidth < 768 ? 180 : 0 },
+    // Increase bottom padding for mobile to account for the drawer
+    padding: { bottom: window.innerWidth < 768 ? 220 : 0 },
   });
 }
 
