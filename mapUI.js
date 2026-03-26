@@ -118,6 +118,7 @@ document.getElementById("brgySearch").addEventListener("input", (e) => {
 });
 
 // --- 2. DATA SYNC LOGIC ---
+// --- 2. DATA SYNC LOGIC ---
 async function syncData(flyToLatest = false) {
   const status = document.getElementById("sync-status");
   status.innerText = "SYNCING";
@@ -130,9 +131,12 @@ async function syncData(flyToLatest = false) {
       },
     });
     const data = await response.json();
-    allNodes = data;
 
-    // 1. Calculate the Global Truth (True Hottest across all sensors)
+    // ⚡ FIX: Filter out inactive sensors immediately after fetching
+    // This ensures only "Active" sensors move forward to deduplication/rendering
+    allNodes = data.filter((node) => node.isActive !== false);
+
+    // 1. Calculate the Global Truth (True Hottest across ACTIVE sensors)
     globalHottestKeys = getCurrentHotSensorKeys();
 
     // 2. Prepare the display list based on current search term
